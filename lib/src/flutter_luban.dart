@@ -105,47 +105,37 @@ class Luban {
     var imageSize = length / 1024;
     if (scale <= 1 && scale > 0.5625) {
       if (fixelH < 1664) {
-        if (imageSize < 150) {
-          decodedImageFile
-              .writeAsBytesSync(encodeJpg(image, quality: object.quality));
-          return decodedImageFile.path;
-        }
         size = (fixelW * fixelH) / pow(1664, 2) * 150;
-        size = size < 60 ? 60 : size;
+        size = size < 150 ? 150 : size;
       } else if (fixelH >= 1664 && fixelH < 4990) {
         thumbW = fixelW / 2;
         thumbH = fixelH / 2;
         size = (thumbH * thumbW) / pow(2495, 2) * 300;
-        size = size < 60 ? 60 : size;
+        size = size < 150 ? 150 : size;
       } else if (fixelH >= 4990 && fixelH < 10240) {
         thumbW = fixelW / 4;
         thumbH = fixelH / 4;
         size = (thumbW * thumbH) / pow(2560, 2) * 300;
-        size = size < 100 ? 100 : size;
+        size = size < 250 ? 250 : size;
       } else {
         int multiple = fixelH / 1280 == 0 ? 1 : fixelH ~/ 1280;
         thumbW = fixelW / multiple;
         thumbH = fixelH / multiple;
         size = (thumbW * thumbH) / pow(2560, 2) * 300;
-        size = size < 100 ? 100 : size;
+        size = size < 250 ? 250 : size;
       }
     } else if (scale <= 0.5625 && scale >= 0.5) {
-      if (fixelH < 1280 && imageSize < 200) {
-        decodedImageFile
-            .writeAsBytesSync(encodeJpg(image, quality: object.quality));
-        return decodedImageFile.path;
-      }
       int multiple = fixelH / 1280 == 0 ? 1 : fixelH ~/ 1280;
       thumbW = fixelW / multiple;
       thumbH = fixelH / multiple;
       size = (thumbW * thumbH) / (1440.0 * 2560.0) * 200;
-      size = size < 100 ? 100 : size;
+      size = size < 250 ? 250 : size;
     } else {
       int multiple = (fixelH / (1280.0 / scale)).ceil();
       thumbW = fixelW / multiple;
       thumbH = fixelH / multiple;
       size = ((thumbW * thumbH) / (1280.0 * (1280 / scale))) * 500;
-      size = size < 100 ? 100 : size;
+      size = size < 250 ? 250 : size;
     }
     if (imageSize < size) {
       decodedImageFile
