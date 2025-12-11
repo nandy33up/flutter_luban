@@ -25,8 +25,7 @@ class Luban {
     return answer.first;
   }
 
-  static Future<List<String?>> compressImageList(
-      List<CompressObject> objects) async {
+  static Future<List<String?>> compressImageList(List<CompressObject> objects) async {
     return compute(_lubanCompressList, objects);
   }
 
@@ -60,7 +59,6 @@ class Luban {
   }
 
   static String? _lubanCompress(CompressObject object) {
-
     const List<String> jpgSuffix = ["jpg", "jpeg", "JPG", "JPEG"];
     const List<String> pngSuffix = ["png", "PNG"];
     bool isJpg = _parseType(object.imageFile.path, jpgSuffix);
@@ -70,8 +68,7 @@ class Luban {
     final originalFileName = object.imageFile.path.split("/").last;
     File? decodedImageFile;
     if (isJpg || isPng) {
-      decodedImageFile = File(
-          '${object.targetPath}/luban_$originalFileName.${isPng ? "png" : "jpg"}');
+      decodedImageFile = File('${object.targetPath}/luban_$originalFileName.${isPng ? "png" : "jpg"}');
     } else {
       throw Exception("flutter_luban don't support this image type");
     }
@@ -138,19 +135,14 @@ class Luban {
       size = size < 250 ? 250 : size;
     }
     if (imageSize < size) {
-      decodedImageFile
-          .writeAsBytesSync(encodeJpg(image, quality: object.quality));
+      decodedImageFile.writeAsBytesSync(encodeJpg(image, quality: object.quality));
       return decodedImageFile.path;
     }
     Image smallerImage;
     if (isLandscape) {
-      smallerImage = copyResize(image,
-          width: thumbH.toInt(),
-          height: object.autoRatio ? null : thumbW.toInt());
+      smallerImage = copyResize(image, width: thumbH.toInt(), height: object.autoRatio ? null : thumbW.toInt());
     } else {
-      smallerImage = copyResize(image,
-          width: thumbW.toInt(),
-          height: object.autoRatio ? null : thumbH.toInt());
+      smallerImage = copyResize(image, width: thumbW.toInt(), height: object.autoRatio ? null : thumbH.toInt());
     }
 
     if (decodedImageFile.existsSync()) {
@@ -174,26 +166,6 @@ class Luban {
         step: object.step,
         isJpg: isJpg,
       );
-    } else {
-      if (imageSize < 500) {
-        _large2SmallCompressImage(
-          image: smallerImage,
-          file: decodedImageFile,
-          quality: object.quality,
-          targetSize: size,
-          step: object.step,
-          isJpg: isJpg,
-        );
-      } else {
-        _small2LargeCompressImage(
-          image: smallerImage,
-          file: decodedImageFile,
-          quality: object.step,
-          targetSize: size,
-          step: object.step,
-          isJpg: isJpg,
-        );
-      }
     }
     return decodedImageFile.path;
   }
@@ -302,7 +274,6 @@ class Luban {
 enum CompressMode {
   SMALL2LARGE,
   LARGE2SMALL,
-  AUTO,
 }
 
 class CompressObject {
@@ -319,7 +290,7 @@ class CompressObject {
   CompressObject({
     required this.imageFile,
     required this.targetPath,
-    this.mode = CompressMode.AUTO,
+    required this.mode,
     this.useCache = false,
     this.quality = 80,
     this.step = 6,
