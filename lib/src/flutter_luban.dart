@@ -66,17 +66,17 @@ class Luban {
 
     if (!isJpg) isPng = _parseType(object.imageFile.path, pngSuffix);
     final originalFileName = object.imageFile.path.split("/").last;
-    File? decodedImageFile;
+    File? newImageFile;
     if (isJpg || isPng) {
-      decodedImageFile = File('${object.targetPath}/luban_$originalFileName.${isPng ? "png" : "jpg"}');
+      newImageFile = File('${object.targetPath}/luban_$originalFileName.${isPng ? "png" : "jpg"}');
     } else {
       throw Exception("flutter_luban don't support this image type");
     }
-    if (decodedImageFile.existsSync()) {
+    if (newImageFile.existsSync()) {
       if (object.useCache) {
-        return decodedImageFile.path;
+        return newImageFile.path;
       }
-      decodedImageFile.deleteSync();
+      newImageFile.deleteSync();
     }
 
     Image image = decodeImage(object.imageFile.readAsBytesSync())!;
@@ -134,40 +134,42 @@ class Luban {
       size = ((thumbW * thumbH) / (1280.0 * (1280 / scale))) * 500;
       size = size < 250 ? 250 : size;
     }
-    if (imageSize < size) {
-      decodedImageFile.writeAsBytesSync(encodeJpg(image, quality: object.quality));
-      return decodedImageFile.path;
+    if ((imageSize < size) ||
+        (object.mode == CompressMode.LARGE2SMALL && object.ignoreSize > 0 && length / 1024 <= object.ignoreSize) ||
+        (object.mode == CompressMode.SMALL2LARGE && object.ignoreSize > 0 && length / 1024 >= object.ignoreSize)) {
+      newImageFile.writeAsBytesSync(encodeJpg(image, quality: object.quality));
+      return newImageFile.path;
     }
-    Image smallerImage;
+    Image oldImage;
     if (isLandscape) {
-      smallerImage = copyResize(image, width: thumbH.toInt(), height: object.autoRatio ? null : thumbW.toInt());
+      oldImage = copyResize(image, width: thumbH.toInt(), height: object.autoRatio ? null : thumbW.toInt());
     } else {
-      smallerImage = copyResize(image, width: thumbW.toInt(), height: object.autoRatio ? null : thumbH.toInt());
+      oldImage = copyResize(image, width: thumbW.toInt(), height: object.autoRatio ? null : thumbH.toInt());
     }
 
-    if (decodedImageFile.existsSync()) {
-      decodedImageFile.deleteSync();
+    if (newImageFile.existsSync()) {
+      newImageFile.deleteSync();
     }
     if (object.mode == CompressMode.LARGE2SMALL) {
       _large2SmallCompressImage(
-        image: smallerImage,
-        file: decodedImageFile,
+        image: oldImage,
+        file: newImageFile,
         quality: object.quality,
         targetSize: size,
         step: object.step,
         isJpg: isJpg,
       );
-    } else if (object.mode == CompressMode.SMALL2LARGE) {
+    } else {
       _small2LargeCompressImage(
-        image: smallerImage,
-        file: decodedImageFile,
+        image: oldImage,
+        file: newImageFile,
         quality: object.step,
         targetSize: size,
         step: object.step,
         isJpg: isJpg,
       );
     }
-    return decodedImageFile.path;
+    return newImageFile.path;
   }
 
   static _large2SmallCompressImage({
@@ -287,6 +289,9 @@ class CompressObject {
   ///If you are not sure whether the image detail property is correct, set true, otherwise the compressed ratio may be incorrect
   final bool autoRatio;
 
+  ///When the image size exceeds this threshold (in KB), no compression will be performed
+  final int ignoreSize;
+
   CompressObject({
     required this.imageFile,
     required this.targetPath,
@@ -295,5 +300,6 @@ class CompressObject {
     this.quality = 80,
     this.step = 6,
     this.autoRatio = true,
+    this.ignoreSize = 0,
   });
 }
